@@ -2,9 +2,10 @@ package com.projects.planner.users.controller;
 
 import com.projects.planner.entity.User;
 import com.projects.planner.users.dto.UserSearchDto;
+import com.projects.planner.users.mq.func.MessageFuncActions;
+import com.projects.planner.users.mq.legacy.MessageProducer;
 import com.projects.planner.users.service.UserService;
 import com.projects.planner.utils.Checker;
-import com.projects.planner.utils.webclient.UserWebClientBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
@@ -25,7 +26,8 @@ public class UserController {
 
     public static final String ID_COLUMN = "id";
     private final UserService userService;
-    private final UserWebClientBuilder userWebClientBuilder;
+//    private final MessageProducer messageProducer;
+    private final MessageFuncActions messageProducer;
 
     @PostMapping("/add")
     public ResponseEntity<User> add(@RequestBody User user) {
@@ -42,9 +44,13 @@ public class UserController {
         user = userService.add(user);
 
         if (user != null) {
-            userWebClientBuilder.setDefaultUserData(user.getId()).subscribe(
-                    result -> System.out.println("Default User Data " + (result ? "is Created" : "not Created"))
-            );
+//            With WebClient
+//            userWebClientBuilder.setDefaultUserData(user.getId()).subscribe(
+//                    result -> System.out.println("Default User Data " + (result ? "is Created" : "not Created"))
+//            );
+
+//            With AMQP
+            messageProducer.setDefaultUserData(user.getId());
         }
 
         return ResponseEntity.ok(user); // возвращаем созданный объект со сгенерированным id
